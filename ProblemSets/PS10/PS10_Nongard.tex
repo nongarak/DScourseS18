@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{PS10_Nongard}
+\author{nongarak }
+\date{April 2018}
+
+\begin{document}
+
+\maketitle
+
+\section{Table}
+
+% latex table generated in R 3.4.3 by xtable 1.8-2 package
+% Mon Apr 09 17:40:30 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rlrr}
+  \hline
+ & modeltype & GMean & F1 \\ 
+  \hline
+1 & Tree & 0.67 & 0.90 \\ 
+  2 & Logarithmic & 0.68 & 0.90 \\ 
+  3 & NN & 0.76 & 0.91 \\ 
+  4 & NBayes & 0.73 & 0.88 \\ 
+  5 & kNN & 0.75 & 0.90 \\ 
+  6 & SVM & 0.74 & 0.90 \\ 
+   \hline
+\end{tabular}
+\end{table}
+
+The ranking of models, from best to worst in out of sample prediction by GMean, goes: 
+NN,
+kNN,
+SVM,
+NBayes,
+Logarithmic,
+Tree
+
+and by F1 score, goes:
+NN,
+kNN,
+SVM,
+Logarithmic,
+Tree,
+NBayes
+
+\end{document}
