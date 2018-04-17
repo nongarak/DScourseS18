@@ -1,0 +1,53 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+
+\title{Bibliography management: BibTeX}
+\author{Share\LaTeX}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Oklahoma is a land of sun and wind – the 6th sunniest and xth windiest state in the US, to be precise. The relatively untapped nature of these abundant natural renewable energy resources means that there are many opportunities for expansion of renewable energy systems across the state. This paper provides a preliminary analysis of suitable sites for utility-scale (1MW or greater) solar installations. We use Multicriteria Decision Analysis (MDA) to assess data on solar radiation (insolation), land use, land gradient, land coverage, and transmission costs to establish the most optimal areas for utility-scale solar farms in the state of Oklahoma. 
+
+\section{Literature Review}
+
+There are of course many different areas to consider when choosing a location for a utility-scale solar farm. How far is the plant generating the energy from the people it will power? What is the cost of energy production going to be, relative to other types of energy? There are also more nebulous questions to answer, which are difficult to quantify without very explicit data. For instance, Brewer et al. show that using social acceptability data gathered from surveys, prime areas of potential solar development land are unacceptable to many citizens, such as in state parks or areas close to human development \cite{brewer}. Other criteria that are often considered: siting in areas that minimize biological impacts to some ecosystem \cite{stoms}, human factors such as projected population, land need, and water usage growth \cite{omitaomu}, and geopolitical factors such as availability of subsidies, politically unacceptable areas, and potential regulation \cite{tisza}. 
+
+We decided, for simplicity's sake and because of a lack of clear and available data, to only use some of the most accessible physical and economic criteria for analysis. Therefore, we only account for insolation value, land gradient, land coverage and usage, and transmission costs to populated areas. 
+
+(Going to add more literature on how/why I made the choices I did)
+
+\section{Data}
+
+The solar irradiation data come from the Oklahoma Mesonet, a system of 98 constantly updating environmental sensors dotted throughout the state that constantly record many important environmental measurements, such as solar irradiation, wind speed, temperature, air pressure, and others. 
+
+The land use data come from the USGS GAP Land Use data survey, collected by satellite and maintained by the federal government. 
+
+The land elevation data are TBD, but I have a lead on them.
+
+Still trying to figure out how to work economics/transmission costs into this. Turns out it's less important on a macro level, and is really only a thing people consider case by case? Lack of clear benchmarks makes it hard to find data. 
+
+\section{Empirical Methods}
+
+The point data for solar irradiation have been preprocessed and interpolated using spatial Kriging methods across a map of Oklahoma, providing a smooth gradient of solar potential. I am in the middle of reclassifying the land use data into a hard boolean criteria for acceptability/suitability for solar farms. I will use elevation data to create a slope map of the state of Oklahoma to create a further hard boolean criteria, as land with a slope of more than 3 percent is not ideal for solar farms. 
+
+Once I have each of the layers, I will use boolean MCDA techniques to create a map of potential areas for the state. 
+
+\section{Anticipated Findings}
+
+I expect to find that the best area for a solar farm exists in Western Oklahoma, where it is sunniest, flattest, and most open, with the cheapest land cost. I may see if I can use average income per census tract as a proxy for land cost? 
+
+\section{Conclusion}
+
+I am definitely a competent adult. The best place to put solar farms is in Western Oklahoma. I'm Paul Harvey, goodnight. 
+
+
+\medskip
+
+\bibliographystyle{unsrt}%Used BibTeX style is unsrt
+\bibliography{sample}
+
+\end{document}
