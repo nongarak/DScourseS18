@@ -1,0 +1,212 @@
+---
+title: "DSCourse Final Project"
+author: "Alex Nongard"
+date: "April 11, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rgdal)
+library(sp)  
+library(spatstat)  
+library(raster)  
+library(maptools)  
+library(automap)
+library(gstat)
+library(GISTools)
+library(lattice)
+library(outliers)
+setwd("C:/Users/nonga/OneDrive - University of Oklahoma/Classes/Spring 2018/Data")
+```
+
+
+THIS IS ALL KRIGGING DATA
+
+```{r loading data}
+solar<-read.csv("C:/Users/nonga/OneDrive - University of Oklahoma/Classes/Spring 2018/Data/18228275.csv")
+mesonet<-read.csv("C:/Users/nonga/OneDrive - University of Oklahoma/Classes/Spring 2018/Data/station_info.csv")
+```
+
+The data are in Joules per m^2.
+
+```{r cleaning the data into a useable format}
+#drop all records with ATOT values less than 0 - that means the site was not online yet for the given time period. This brings us from 1,227,380 observations to 986614
+solar<-solar[!(solar$ATOT<="0"),] 
+solar<-subset(solar,select = -c(YEAR, MONTH, DAY, AMAX))
+#this gives us a dataset with daily insolation records for every Mesonet site. To do interpolation, however, we need one number for each site. We will go with the average value, as long-term values are what are most important to siting an investment like a solar farm.
+solar<-aggregate(ATOT ~ STID, solar, FUN = function(x) mean(as.numeric(as.character(x))))
+colnames(solar)[colnames(solar)=="STID"] <- "stid"
+#putting all of the data in one dataframe, mesonet
+mesonet<-merge(x=mesonet,y=solar,by="stid",all=FALSE)
+#mesonet now includes the name, location, elevation, and average solar insolation for each of the 98 sites. 
+```
+
+```{r, interpolation of solar potential across the state}
+#we are going to build a visualization of solar potential across the state
+#Turning mesonet into a Spatial Pixels Data Frame for coercion in GIS applications
+coordinates(mesonet) <- c("elon", "nlat")
+spplot(mesonet,"ATOT",main="Insolation at Mesonet sites, in MJ per meter squared")
+spplot(mesonet,"elev",main="Elevation at Mesonet sites, by feet above sea level")
+#interesting. Quick question: What's the relationship between elevation and the mean solar value?
+
+plot(mesonet$elev,mesonet$ATOT)
+lm(data=mesonet, elev~ATOT)
+#strong and linear. Interesting - this is potentially useful for future applications
+```
+
+
+
+```{r}
+# use state bounds from gadm website:
+# us = shapefile("USA_adm1.shp")
+us <- getData("GADM", country="USA", level=1)
+# extract states (need to uppercase everything)
+oklahoma <- c("Oklahoma")
+
+ok = us[match(toupper(oklahoma),toupper(us$NAME_1)),]
+
+# create a random raster over the space:        
+r = raster(xmn=-104,xmx=-94,ymn=33,ymx=38,nrow=1000,ncol=1000)
+r[]=runif(1000*1000)
+
+# plot it with the boundaries we want to clip against:
+plot(r)
+plot(ok,add=TRUE)
+
+# now use the mask function
+rr <- mask(r, ok)
+
+# plot, and overlay:
+plot(rr);plot(ok,add=TRUE)
+
+# Change data type to SpatialGridDataFrame for use in Kriging
+counties.gridm<-as(rr,'SpatialGridDataFrame')
+
+
+proj4string(mesonet) <- proj4string(counties.gridm) #set projections equal to each other (latlong, not a real projection)
+```
+
+```{r}
+#Finding optimal variogram arguments
+autovar.ok<-autofitVariogram(ATOT~1,mesonet)
+autovar.ok
+#Fitting a variogram for Ordinary Kriging
+v <- variogram(ATOT~1, mesonet)
+plot(v)
+fve <- fit.variogram(v, vgm(psill=24971,model="Ste",range=189881.6,kappa=1.1))
+fve
+
+#Using Ordinary Kriging 
+ATOT.ok <- krige(ATOT~1, mesonet, counties.gridm, fve)
+
+png(filename="kriging.png", 
+    units="in", 
+    width=5, 
+    height=4, 
+    pointsize=12, 
+    res=72)
+plot(ATOT.ok, main="Ordinary Kriging Interpolation, by in MJ per meter squared"); plot(ok, add=T)
+dev.off()
+
+krigrast <- raster(ATOT.ok)
+```
+
+
+
+THIS IS ALL SLOPE DATA
+
+```{r}
+DEM <- raster("C:/Users/nonga/OneDrive - University of Oklahoma/Classes/Spring 2018/Data/okslope1.tif")
+
+#This will reclassify the raster values so that all slopes less than 3% go to 1 and all slopes greater than 3% go to 0 - a hard Boolean classifier for later. 
+m <- c(0,3,1, 3,45,0)
+rcl <- matrix(m, ncol=3, byrow=TRUE)
+DEM3pct <- reclassify(DEM, rcl)
+
+
+png(filename="dem.png", 
+    units="in", 
+    width=5, 
+    height=4, 
+    pointsize=12, 
+    res=72)
+plot(DEM3pct, main= "<3% maximum slope"); plot(ok, add=T)
+dev.off()
+```
+
+
+
+
+THIS IS ALL LAND USE DATA
+```{r}
+landuseall <- raster("C:/Users/nonga/OneDrive - University of Oklahoma/Classes/Spring 2018/Data/tif3.tif")
+plot(landuseall)
+
+m <- c(0,264,0, 265,562,1, 563,584,0)
+rcl <- matrix(m, ncol=3, byrow=TRUE)
+landuse <- reclassify(landuseall, rcl)
+landuse.resample<-resample(landuse,DEM3pct)
+plot(landuse.resample)
+
+#kinda sucks, but it will have to do. Not completely accurate. 
+m <- c(0,.5,0, .5,1,1)
+rcl <- matrix(m, ncol=3, byrow=TRUE)
+landuse.reclass <- reclassify(landuse.resample, rcl)
+
+png(filename="landuse.png", 
+    units="in", 
+    width=5, 
+    height=4, 
+    pointsize=12, 
+    res=72)
+plot(landuse.reclass, main= "Acceptable Land Use"); plot(ok, add=T)
+dev.off()
+```
+
+
+THIS IS ALL LAND VALUE BY CENSUS TRACT DATA 
+
+```{r}
+landvalue<- raster("C:/Users/nonga/OneDrive - University of Oklahoma/Classes/Spring 2018/Data/medvalreverse1.tif")
+
+png(filename="value.png", 
+    units="in", 
+    width=5, 
+    height=4, 
+    pointsize=12, 
+    res=72)
+plot(landvalue, main="Land Value by Census Tract, inverted ordinal scale"); plot(ok, add=T)
+dev.off()
+```
+
+Now to do raster multiplication...
+
+
+```{r}
+landuse_slope <- DEM3pct * landuse.reclass
+use_slope_value <- landuse_slope * landvalue
+
+crs(krigrast) <- "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"
+krigrast.resample <- resample(krigrast, use_slope_value)
+
+use_slope_value_krig <- use_slope_value * krigrast.resample
+
+png(filename="final.png", 
+    units="in", 
+    width=5, 
+    height=4, 
+    pointsize=12, 
+    res=72)
+plot(use_slope_value_krig, main="Utility-Scale Solar Site Suitability in Oklahoma"); plot(ok, add=T)
+dev.off()
+
+
+use_slope_krig <- landuse_slope * krigrast.resample
+plot(use_slope_krig, main="Utility-Scale Solar Site Suitability in Oklahoma, minus cost element"); plot(ok, add=T)
+```
+
+
+
+
+

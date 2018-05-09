@@ -1,0 +1,48 @@
+---
+title: "Site Suitability for Utility-Scale Solar Farms in Oklahoma"
+author: "Alex Nongard"
+date: "May 3, 2018"
+output: 
+  beamer_presentation:
+    theme: "AnnArbor"
+    colortheme: "dolphin"
+    fonttheme: "structurebold"
+    incremental: false
+---
+
+
+
+## Introduction 
+- OK is 6th in the nation for solar potential, but much lower in installed capacity
+- Goal is to map ideal spaces for large-scale solar farms
+- Comparative within Oklahoma because of bounds, least-most ideal, not absolute
+
+## Data Collection/Description
+- Solar irradiance (brighter is better, Mesonet data)
+- Land gradient (< 3%, USGS DEM elevatin data)
+- Land cover data (only appropriate land use, USGS satellite data)
+- Land price data per census tract (cheaper is better, US census data)
+
+## Methods
+- Multicriteria Decision Analysis
+- Spatial interpolation (Ordinary Kriging)
+- Map projecting / data wrangling
+
+## Findings
+- Western Oklahoma is the best, Eastern Oklahoma is the worst
+- Significant portions of the state are untenable for land use/gradient reasons
+- Suitability gradient also follows temperature / moisture gradient 
+
+![Final map rendered in ArcGIS](C:\Users\nonga\OneDrive - University of Oklahoma\Classes\Spring 2018\GIS Applications\Project\sneakpeakcensus.JPG)
+
+## What did we learn?
+- Anecdotal beliefs about Oklahoma's solar potential are correct
+- Despite decent solar suitability, Oklahoma City is far more expensive than other options 
+
+
+
+
+
+
+
+
